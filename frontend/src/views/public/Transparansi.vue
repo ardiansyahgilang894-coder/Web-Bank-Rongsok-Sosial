@@ -9,7 +9,11 @@ import {
     WalletIcon,
     ArrowTrendingUpIcon,
     ArrowTrendingDownIcon,
-    ScaleIcon
+    ScaleIcon,
+    UserCircleIcon,
+    ArrowRightOnRectangleIcon,
+    Squares2X2Icon,
+    ChevronDownIcon,
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -17,6 +21,25 @@ const router = useRouter()
 const isLoggedIn = computed(() => !!localStorage.getItem('token'))
 
 const showBackToTop = ref(false)
+
+const showDropdown = ref(false)
+
+const user = ref<any>(null)
+
+onMounted(() => {
+    const storedUser = localStorage.getItem('user')
+
+    if (storedUser) {
+        user.value = JSON.parse(storedUser)
+    }
+})
+
+const isAdminOrPetugas = computed(() => {
+    return (
+        user.value?.role === 'admin' ||
+        user.value?.role === 'petugas'
+    )
+})
 
 const handleScroll = () => {
     showBackToTop.value = window.scrollY > 400
@@ -231,10 +254,44 @@ onUnmounted(() => {
                     Lihat Data
                 </a> -->
 
-                <button v-if="isLoggedIn" @click="logout"
-                    class="rounded-2xl bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-100">
-                    Logout
-                </button>
+                <div v-if="isLoggedIn && isAdminOrPetugas" class="relative">
+                    <button @click="showDropdown = !showDropdown"
+                        class="flex items-center gap-3 rounded-2xl bg-white px-4 py-2 shadow-sm hover:bg-slate-50">
+                        <div
+                            class="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 font-bold text-white">
+                            {{ user?.name?.charAt(0).toUpperCase() }}
+                        </div>
+
+                        <div class="hidden text-left md:block">
+                            <p class="text-sm font-semibold text-slate-800">
+                                {{ user?.name }}
+                            </p>
+
+                            <p class="text-xs capitalize text-slate-500">
+                                {{ user?.role }}
+                            </p>
+                        </div>
+                        <ChevronDownIcon class="h-4 w-4 text-slate-500" />
+                    </button>
+
+                    <div v-if="showDropdown"
+                        class="absolute right-0 z-50 mt-3 w-48 rounded-2xl border border-slate-100 bg-white p-2 shadow-xl">
+                        <RouterLink to="/admin/profile"
+                            class="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-emerald-50 hover:text-emerald-600">
+                            <UserCircleIcon class="h-5 w-5" /> 
+                                Profile
+                        </RouterLink>
+
+                        <RouterLink to="/admin/dashboard"
+                            class="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-emerald-50 hover:text-emerald-600">
+                            <Squares2X2Icon class="h-5 w-5" /> Dashboard
+                        </RouterLink>
+
+                        <button @click="logout" class="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-600">
+                            <ArrowRightOnRectangleIcon class="h-5 w-5" /> Logout
+                        </button>
+                    </div>
+                </div>
 
                 <RouterLink v-else to="/login"
                     class="rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-semibold shadow-emerald-200 text-white hover:bg-emerald-700">
@@ -487,7 +544,7 @@ onUnmounted(() => {
 
                                 <span
                                     class="mt-2 inline-block rounded-full bg-sky-100 px-2 py-1 text-xs font-medium text-sky-700">
-                                    {{ formatSumber (item.sumber) }}
+                                    {{ formatSumber(item.sumber) }}
                                 </span>
                             </div>
 
@@ -496,7 +553,8 @@ onUnmounted(() => {
                             </p>
                         </div>
 
-                        <p v-if="!pemasukanTerbaru?.length" class="text-sm text-slate-500 border border-dashed border-slate-300 rounded-3xl p-4 text-center">
+                        <p v-if="!pemasukanTerbaru?.length"
+                            class="text-sm text-slate-500 border border-dashed border-slate-300 rounded-3xl p-4 text-center">
                             Belum ada data pemasukan.
                         </p>
                     </div>
@@ -525,7 +583,8 @@ onUnmounted(() => {
                             </div>
                         </div>
 
-                        <p v-if="penjualanTerbaru.length === 0" class="text-sm text-slate-500 border border-dashed border-slate-300 rounded-3xl p-4 text-center">
+                        <p v-if="penjualanTerbaru.length === 0"
+                            class="text-sm text-slate-500 border border-dashed border-slate-300 rounded-3xl p-4 text-center">
                             Belum ada data penjualan rongsok.
                         </p>
                     </div>
@@ -558,7 +617,8 @@ onUnmounted(() => {
                             </div>
                         </div>
 
-                        <p v-if="pengeluaranTerbaru.length === 0" class="text-sm text-slate-500 border border-dashed border-slate-300 rounded-3xl p-4 text-center">
+                        <p v-if="pengeluaranTerbaru.length === 0"
+                            class="text-sm text-slate-500 border border-dashed border-slate-300 rounded-3xl p-4 text-center">
                             Belum ada data pengeluaran sosial.
                         </p>
                     </div>

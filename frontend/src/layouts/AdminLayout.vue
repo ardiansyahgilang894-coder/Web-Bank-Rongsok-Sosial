@@ -156,18 +156,18 @@ const logout = async () => {
                             class="absolute right-0 z-50 mt-3 w-48 rounded-2xl border border-slate-100 bg-white p-2 shadow-xl">
                             <RouterLink to="/admin/profile"
                                 class="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-emerald-50 hover:text-emerald-600">
-                                <UserIcon class="h-4 w-4" />
+                                <UserIcon class="h-5 w-5" />
                                 Profile
                             </RouterLink>
                             <RouterLink to="/admin"
                                 class="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-emerald-50 hover:text-emerald-600">
-                                <HomeIcon class="h-4 w-4" />
+                                <HomeIcon class="h-5 w-5" />
                                 Dashboard User
                             </RouterLink>
 
                             <button type="button" @click="logout"
                                 class="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50">
-                                <ArrowRightOnRectangleIcon class="h-4 w-4" />
+                                <ArrowRightOnRectangleIcon class="h-5 w-5" />
                                 Logout
                             </button>
                         </div>
