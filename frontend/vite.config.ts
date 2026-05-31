@@ -9,16 +9,4 @@ export default defineConfig({
     vue(),
     tailwindcss(),
   ],
-
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
-    }
-  }
-
-  base: '/',
-  plugins: [
-    vue(),
-    tailwindcss(),
-  ],
 })
