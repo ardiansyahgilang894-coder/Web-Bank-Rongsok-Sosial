@@ -18,7 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
-        $middleware->append(HandleCors::class);
+        $middleware->prepend(HandleCors::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
