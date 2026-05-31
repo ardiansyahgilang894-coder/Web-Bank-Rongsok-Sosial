@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import { computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
 import AOS from 'aos'
 import 'aos/dist/aos.css'
+
 import {
     WalletIcon,
     ArrowTrendingUpIcon,
@@ -17,59 +18,17 @@ import {
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
-const isLoggedIn = computed(() => !!localStorage.getItem('token'))
+const isLoggedIn = computed(() => authStore.isAuthenticated)
+const user = computed(() => authStore.user)
 
 const showBackToTop = ref(false)
-
 const showDropdown = ref(false)
 
-const user = ref<any>(null)
-
-onMounted(() => {
-    const storedUser = localStorage.getItem('user')
-
-    if (storedUser) {
-        user.value = JSON.parse(storedUser)
-    }
-})
-
 const isAdminOrPetugas = computed(() => {
-    return (
-        user.value?.role === 'admin' ||
-        user.value?.role === 'petugas'
-    )
+    return user.value?.role === 'admin' || user.value?.role === 'petugas'
 })
-
-const handleScroll = () => {
-    showBackToTop.value = window.scrollY > 400
-}
-
-const scrollToTop = () => {
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    })
-}
-
-const formatSumber = (sumber: string) => {
-    return sumber
-        .replaceAll('_', ' ')
-        .replace(/\b\w/g, (char) => char.toUpperCase())
-}
-
-const logout = async () => {
-    try {
-        await api.post('/logout')
-    } catch (error) {
-        console.error(error)
-    }
-
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-
-    router.push('/login')
-}
 
 interface Summary {
     total_hasil_jual_rongsok: number
@@ -90,7 +49,6 @@ interface PenjualanRongsok {
     tempat_jual: string | null
     keterangan: string | null
     foto_bukti: string | null
-
     pemasukan_kas?: {
         id: number
         nominal: number
@@ -144,8 +102,8 @@ const summary = ref<Summary>({
 })
 
 const penjualanTerbaru = ref<PenjualanRongsok[]>([])
-const pengeluaranTerbaru = ref<PengeluaranKas[]>([])
 const pemasukanTerbaru = ref<PemasukanKas[]>([])
+const pengeluaranTerbaru = ref<PengeluaranKas[]>([])
 const galeriTerbaru = ref<GaleriKegiatan[]>([])
 const laporanBulanan = ref<LaporanBulanan[]>([])
 
@@ -165,7 +123,7 @@ const namaBulan = [
     'Desember',
 ]
 
-const formatRupiah = (value: number) => {
+const formatRupiah = (value: number = 0) => {
     return new Intl.NumberFormat('id-ID', {
         style: 'currency',
         currency: 'IDR',
@@ -175,11 +133,42 @@ const formatRupiah = (value: number) => {
 
 const getFotoUrl = (foto: string | null) => {
     if (!foto) return ''
-    return `http://localhost:8000/storage/${foto}`
+
+    return `${import.meta.env.VITE_STORAGE_URL}/${foto}`
 }
 
-const formatKategori = (kategori: string) => {
+const formatKategori = (kategori: string = '') => {
     return kategori.replaceAll('_', ' ')
+}
+
+const formatSumber = (sumber: string = '') => {
+    return sumber
+        .replaceAll('_', ' ')
+        .replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+const handleScroll = () => {
+    showBackToTop.value = window.scrollY > 400
+}
+
+const scrollToTop = () => {
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+    })
+}
+
+const logout = async () => {
+    try {
+        await api.post('/logout')
+    } catch (error) {
+        console.error(error)
+    }
+
+    authStore.logout()
+    showDropdown.value = false
+
+    router.push('/login')
 }
 
 const loadData = async () => {
@@ -190,8 +179,7 @@ const loadData = async () => {
         const res = await api.get('/public/transparansi')
 
         summary.value = res.data.summary ?? summary.value
-
-        penjualanTerbaru.value = res.data.nominal ?? []
+        penjualanTerbaru.value = res.data.penjualan_terbaru ?? []
         pemasukanTerbaru.value = res.data.pemasukan_terbaru ?? []
         pengeluaranTerbaru.value = res.data.pengeluaran_terbaru ?? []
         galeriTerbaru.value = res.data.galeri_terbaru ?? []
@@ -207,6 +195,7 @@ const loadData = async () => {
 onMounted(() => {
     loadData()
     window.addEventListener('scroll', handleScroll)
+
     AOS.init({
         duration: 800,
         once: true,
@@ -254,49 +243,43 @@ onUnmounted(() => {
                     Lihat Data
                 </a> -->
 
-                <div v-if="isLoggedIn && isAdminOrPetugas" class="relative">
+                <div v-if="isLoggedIn" class="relative">
                     <button @click="showDropdown = !showDropdown"
-                        class="flex items-center gap-3 rounded-2xl bg-white px-4 py-2 shadow-sm hover:bg-slate-50">
-                        <div
-                            class="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 font-bold text-white">
-                            {{ user?.name?.charAt(0).toUpperCase() }}
-                        </div>
+                        class="flex items-center gap-2 rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">
+                        <UserCircleIcon class="h-6 w-6 text-emerald-600" />
 
-                        <div class="hidden text-left md:block">
-                            <p class="text-sm font-semibold text-slate-800">
-                                {{ user?.name }}
-                            </p>
-
-                            <p class="text-xs capitalize text-slate-500">
-                                {{ user?.role }}
-                            </p>
-                        </div>
-                        <ChevronDownIcon class="h-4 w-4 text-slate-500" />
+                        <span class="hidden md:block">
+                            {{ user?.name }}
+                        </span>
                     </button>
 
                     <div v-if="showDropdown"
                         class="absolute right-0 z-50 mt-3 w-48 rounded-2xl border border-slate-100 bg-white p-2 shadow-xl">
                         <RouterLink to="/admin/profile"
-                            class="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-emerald-50 hover:text-emerald-600">
-                            <UserCircleIcon class="h-5 w-5" /> 
-                                Profile
+                            class="flex items-center gap-2 rounded-xl px-4 py-3 text-sm text-slate-700 hover:bg-slate-50">
+                            <UserCircleIcon class="h-5 w-5" />
+                            Profile
                         </RouterLink>
 
-                        <RouterLink to="/admin/dashboard"
-                            class="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-emerald-50 hover:text-emerald-600">
-                            <Squares2X2Icon class="h-5 w-5" /> Dashboard
+                        <RouterLink v-if="user?.role === 'admin' || user?.role === 'petugas'" to="/admin/dashboard"
+                            class="flex items-center gap-2 rounded-xl px-4 py-3 text-sm text-slate-700 hover:bg-slate-50">
+                            <Squares2X2Icon class="h-5 w-5" />
+                            Dashboard
                         </RouterLink>
 
-                        <button @click="logout" class="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-600">
-                            <ArrowRightOnRectangleIcon class="h-5 w-5" /> Logout
+                        <button @click="logout"
+                            class="flex w-full items-center gap-2 rounded-xl px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50">
+                            <ArrowRightOnRectangleIcon class="h-5 w-5" />
+                            Logout
                         </button>
                     </div>
                 </div>
 
                 <RouterLink v-else to="/login"
-                    class="rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-semibold shadow-emerald-200 text-white hover:bg-emerald-700">
+                    class="rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-emerald-200 hover:bg-emerald-700">
                     Login
                 </RouterLink>
+
             </div>
         </header>
 
