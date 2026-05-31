@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 
 class AuthController extends Controller
 {
@@ -40,7 +41,7 @@ class AuthController extends Controller
                 'otp' => $otp,
             ]);
 
-            Mail::to($user->email)->send(new OtpMail($otp));
+            $this->sendOtpWithBrevo($user, $otp);
 
             Log::info('OTP berhasil dikirim', [
                 'email' => $user->email,
@@ -63,6 +64,41 @@ class AuthController extends Controller
             'message' => 'Registrasi berhasil. Kode OTP telah dikirim ke email.',
             'email' => $user->email,
         ], 201);
+    }
+
+    private function sendOtpWithBrevo($user, $otp)
+    {
+        $response = Http::withHeaders([
+            'api-key' => env('BREVO_API_KEY'),
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+        ])->post('https://api.brevo.com/v3/smtp/email', [
+            'sender' => [
+                'name' => env('MAIL_FROM_NAME', 'Loopit'),
+                'email' => env('MAIL_FROM_ADDRESS'),
+            ],
+            'to' => [
+                [
+                    'email' => $user->email,
+                    'name' => $user->name,
+                ],
+            ],
+            'subject' => 'Kode OTP Verifikasi Akun Loopit',
+            'htmlContent' => "
+            <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #334155;'>
+                <h2 style='color: #059669;'>Verifikasi Akun Loopit</h2>
+                <p>Halo <strong>{$user->name}</strong>,</p>
+                <p>Gunakan kode OTP berikut untuk verifikasi akun kamu:</p>
+                <h1 style='letter-spacing: 6px; color: #059669;'>{$otp}</h1>
+                <p>Kode OTP ini berlaku selama <strong>10 menit</strong>.</p>
+                <p>Jika kamu tidak merasa mendaftar, abaikan email ini.</p>
+            </div>
+        ",
+        ]);
+
+        if (!$response->successful()) {
+            throw new \Exception($response->body());
+        }
     }
 
     public function verifyOtp(Request $request)
