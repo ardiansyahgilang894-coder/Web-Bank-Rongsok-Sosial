@@ -6,44 +6,95 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
 
 class ForgotPasswordController extends Controller
 {
     public function sendOtp(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-        ]);
+{
+    $request->validate([
+        'email' => 'required|email',
+    ]);
 
-        $user = User::where('email', $request->email)->first();
+    $user = User::where('email', $request->email)->first();
 
-        if (!$user) {
-            return response()->json([
-                'message' => 'Email tidak ditemukan',
-            ], 404);
-        }
-
-        $otp = random_int(100000, 999999);
-
-        $user->update([
-            'reset_password_otp' => $otp,
-            'reset_password_otp_expires_at' => now()->addMinutes(10),
-            'reset_password_token' => null,
-            'reset_password_token_expires_at' => null,
-        ]);
-
-        Mail::raw("Kode OTP reset password Anda adalah: {$otp}", function ($message) use ($user) {
-            $message->to($user->email)
-                ->subject('Reset Password Loopit');
-        });
-
+    if (!$user) {
         return response()->json([
-            'message' => 'Kode OTP reset password berhasil dikirim',
-        ]);
+            'message' => 'Email tidak ditemukan',
+        ], 404);
     }
+
+    $otp = random_int(100000, 999999);
+
+    $user->update([
+        'reset_password_otp' => $otp,
+        'reset_password_otp_expires_at' => now()->addMinutes(10),
+        'reset_password_token' => null,
+        'reset_password_token_expires_at' => null,
+    ]);
+
+    try {
+        $this->sendOtpWithBrevo($user, $otp, 'reset');
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'OTP gagal dikirim.',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+
+    return response()->json([
+        'message' => 'Kode OTP reset password berhasil dikirim',
+    ]);
+}
+
+    private function sendOtpWithBrevo($user, $otp, $type = 'register')
+{
+    $subject = $type === 'reset'
+        ? 'Kode OTP Reset Password Loopit'
+        : 'Kode OTP Verifikasi Akun Loopit';
+
+    $title = $type === 'reset'
+        ? 'Reset Password Loopit'
+        : 'Verifikasi Akun Loopit';
+
+    $description = $type === 'reset'
+        ? 'Gunakan kode OTP berikut untuk reset password akun kamu:'
+        : 'Gunakan kode OTP berikut untuk verifikasi akun kamu:';
+
+    $response = Http::withHeaders([
+        'api-key' => env('BREVO_API_KEY'),
+        'Content-Type' => 'application/json',
+        'Accept' => 'application/json',
+    ])->post('https://api.brevo.com/v3/smtp/email', [
+        'sender' => [
+            'name' => env('MAIL_FROM_NAME', 'Loopit'),
+            'email' => env('MAIL_FROM_ADDRESS'),
+        ],
+        'to' => [
+            [
+                'email' => $user->email,
+                'name' => $user->name,
+            ],
+        ],
+        'subject' => $subject,
+        'htmlContent' => "
+            <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #334155;'>
+                <h2 style='color: #059669;'>{$title}</h2>
+                <p>Halo <strong>{$user->name}</strong>,</p>
+                <p>{$description}</p>
+                <h1 style='letter-spacing: 6px; color: #059669;'>{$otp}</h1>
+                <p>Kode OTP ini berlaku selama <strong>10 menit</strong>.</p>
+                <p>Jika kamu tidak merasa melakukan permintaan ini, abaikan email ini.</p>
+            </div>
+        ",
+    ]);
+
+    if (!$response->successful()) {
+        throw new \Exception($response->body());
+    }
+}
 
     public function verifyOtp(Request $request)
     {
