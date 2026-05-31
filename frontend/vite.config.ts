@@ -15,4 +15,10 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   }
+
+  base: '/Web-Bank-Rongsok-Sosial/',
+  plugins: [
+    vue(),
+    tailwindcss(),
+  ],
 })
