@@ -172,6 +172,7 @@ const submitForm = async () => {
                 icon: 'success',
                 title: 'Data penjualan rongsok berhasil diperbarui',
             })
+            await loadData()
         } else {
             await api.post('/penjualan-rongsok', payload, {
                 headers: {
@@ -183,6 +184,7 @@ const submitForm = async () => {
                 icon: 'success',
                 title: 'Data penjualan rongsok berhasil ditambahkan',
             })
+            await loadData()
         }
 
         resetForm()
@@ -250,13 +252,6 @@ const deleteData = async (id: number) => {
 
     try {
         await api.delete(`/penjualan-rongsok/${id}`)
-        await Swal.fire({
-            icon: 'success',
-            title: 'Terhapus!',
-            text: 'Data penjualan rongsok berhasil dihapus.',
-            timer: 1500,
-            showConfirmButton: false,
-        })
         Toast.fire({
             icon: 'success',
             title: 'Data penjualan rongsok berhasil dihapus',

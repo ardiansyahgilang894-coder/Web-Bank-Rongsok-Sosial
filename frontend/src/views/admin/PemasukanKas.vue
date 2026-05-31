@@ -234,13 +234,11 @@ const performDelete = async (id: number) => {
             title: 'Pemasukan kas berhasil dihapus'
         })
 
-        Swal.fire({
-            icon: 'success',
-            title: 'Terhapus!',
-            text: 'Data pemasukan kas berhasil dihapus.',
-            timer: 1500,
-            showConfirmButton: false,
+        Toast.fire({
+        icon: 'success',
+        title: 'Data pemasukan kas berhasil dihapus',
         })
+        await loadData()
     } catch (error) {
         console.error(error)
         Toast.fire({

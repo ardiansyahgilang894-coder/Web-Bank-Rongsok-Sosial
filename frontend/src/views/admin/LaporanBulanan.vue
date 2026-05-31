@@ -224,8 +224,8 @@ onMounted(loadLaporan)
               </tr>
 
               <tr v-if="paginatedPenjualan.length === 0">
-                <td colspan="6" class="py-3 px-4 text-center text-slate-500">
-                  Data laporan tidak ditemukan.
+                <td colspan="6" class="py-8 px-4 text-center text-slate-500">
+                  Belum ada data laporan.
                 </td>
               </tr>
             </tbody>
