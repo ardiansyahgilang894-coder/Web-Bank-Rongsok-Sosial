@@ -16,7 +16,7 @@ export default defineConfig({
     }
   }
 
-  base: '/Web-Bank-Rongsok-Sosial/',
+  base: '/',
   plugins: [
     vue(),
     tailwindcss(),
