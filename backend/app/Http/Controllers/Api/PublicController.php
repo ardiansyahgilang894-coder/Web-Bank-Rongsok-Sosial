@@ -26,19 +26,19 @@ class PublicController extends Controller
                 'total_kegiatan' => GaleriKegiatan::count(),
             ],
 
-            'pemasukan_terbaru' => PemasukanKas::latest()
+            'pemasukan_terbaru' => PemasukanKas::latest('tanggal')
                 ->take(5)
                 ->get(),
 
-            'nominal' => PenjualanRongsok::latest()
+            'penjualan_terbaru' => PenjualanRongsok::latest('tanggal')
                 ->take(5)
                 ->get(),
 
-            'pengeluaran_terbaru' => PengeluaranKas::latest()
+            'pengeluaran_terbaru' => PengeluaranKas::latest('tanggal')
                 ->take(5)
                 ->get(),
 
-            'galeri_terbaru' => GaleriKegiatan::latest()
+            'galeri_terbaru' => GaleriKegiatan::latest('tanggal')
                 ->take(6)
                 ->get(),
 
@@ -48,9 +48,9 @@ class PublicController extends Controller
                 DB::raw('SUM(total_berat) as total_berat'),
                 DB::raw('SUM(total_pendapatan) as total_pendapatan')
             )
-                ->groupBy('tahun', 'bulan')
-                ->orderBy('tahun', 'desc')
-                ->orderBy('bulan', 'desc')
+                ->groupBy(DB::raw('YEAR(tanggal)'), DB::raw('MONTH(tanggal)'))
+                ->orderBy(DB::raw('YEAR(tanggal)'), 'desc')
+                ->orderBy(DB::raw('MONTH(tanggal)'), 'desc')
                 ->take(12)
                 ->get()
                 ->reverse()
