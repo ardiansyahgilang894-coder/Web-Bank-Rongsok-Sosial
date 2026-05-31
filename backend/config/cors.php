@@ -6,9 +6,9 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['https://web-bank-rongsok-sosial-loopit.vercel.app'],
+    'allowed_origins' => ['*'],
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => ['^https://.*\.vercel\.app$'],
 
     'allowed_headers' => ['*'],
 
