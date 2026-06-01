@@ -7,7 +7,7 @@
   },
   "deploy": {
     "runtime": "V2",
-    "startCommand": "ls -la storage/app/public/galeri",
+    "startCommand": "find storage -type f | head -50",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
