@@ -92,18 +92,24 @@ class PenjualanRongsokController extends Controller
             $foto = $request->file('foto_bukti')->store('penjualan-rongsok', 'public');
         }
 
-        PemasukanKas::where('penjualan_rongsok_id', $penjualan->id)->update([
-            'tanggal' => $request->tanggal,
-            'sumber' => $request->penjualan_rongsok,
-            'periode_mulai' => $request->periode_mulai,
-            'periode_selesai' => $request->periode_selesai,
-            'total_berat' => $request->total_berat,
-            'total_pendapatan' => $request->total_pendapatan,
-            'tempat_jual' => $request->tempat_jual,
-            'keterangan' => $request->keterangan,
-            'nominal' => $request->total_pendapatan,
-            'foto_bukti' => $foto,
-        ]);
+        $penjualan->update([
+    'tanggal' => $request->tanggal,
+    'periode_mulai' => $request->periode_mulai,
+    'periode_selesai' => $request->periode_selesai,
+    'total_berat' => $request->total_berat,
+    'total_pendapatan' => $request->total_pendapatan,
+    'tempat_jual' => $request->tempat_jual,
+    'keterangan' => $request->keterangan,
+    'foto_bukti' => $foto,
+]);
+
+       PemasukanKas::where('penjualan_rongsok_id', $penjualan->id)->update([
+    'tanggal' => $request->tanggal,
+    'sumber' => 'penjualan_rongsok',
+    'keterangan' => $request->keterangan ?? 'Hasil penjualan rongsok',
+    'nominal' => $request->total_pendapatan,
+    'foto' => $foto,
+]);
 
         return response()->json([
             'message' => 'Data penjualan rongsok berhasil diperbarui',
