@@ -7,7 +7,7 @@
   },
   "deploy": {
     "runtime": "V2",
-    "startCommand": "ls -la public",
+    "startCommand": "php artisan storage:link",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
