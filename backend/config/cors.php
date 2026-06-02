@@ -5,7 +5,10 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => [
+    'https://divsosmutiaracahayasunnah.my.id',
+    'https://www.divsosmutiaracahayasunnah.my.id',
+    ],
 
     'allowed_origins_patterns' => [],
 
